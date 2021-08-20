@@ -14,6 +14,7 @@ public class MyProducer {
         properties.put("bootstrap.servers","127.0.0.1:9092");
         properties.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer","org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("partitioner.class","com.imooc.kafkastudy.CustomPartitioner");
         producer = new KafkaProducer<>(properties);
     }
 
@@ -36,7 +37,16 @@ public class MyProducer {
         ProducerRecord<String, String> record = new ProducerRecord<String, String>("imooc-kafka-study",
                 "name",
                 "callback");
+
+        ProducerRecord<String, String> record1 = new ProducerRecord<String, String>("imooc-kafka-study",
+                "name-x",
+                "callback");
+        ProducerRecord<String, String> record2 = new ProducerRecord<String, String>("imooc-kafka-study",
+                "name",
+                "callback");
         producer.send(record,new MyProducerCallback());
+        producer.send(record1,new MyProducerCallback());
+        producer.send(record2,new MyProducerCallback());
         producer.close();
     }
 
