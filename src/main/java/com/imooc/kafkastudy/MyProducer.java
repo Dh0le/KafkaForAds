@@ -42,7 +42,7 @@ public class MyProducer {
                 "name-x",
                 "callback");
         ProducerRecord<String, String> record2 = new ProducerRecord<String, String>("imooc-kafka-study",
-                "name",
+                "name-y",
                 "callback");
         producer.send(record,new MyProducerCallback());
         producer.send(record1,new MyProducerCallback());
