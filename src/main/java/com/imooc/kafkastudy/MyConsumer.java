@@ -1,13 +1,12 @@
 package com.imooc.kafkastudy;
 
-import org.apache.kafka.clients.consumer.CommitFailedException;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.common.TopicPartition;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 
 public class MyConsumer {
@@ -109,6 +108,72 @@ public class MyConsumer {
 
         }finally {
             consumer.close();;
+        }
+    }
+
+    private static void generalConsumeMessageAsyncCommitWithCallback(){
+        properties.put("auto.commit.offset",false);
+        consumer = new KafkaConsumer<String, String>(properties);
+        consumer.subscribe(Collections.singleton("imooc-kafka-study"));
+        try{
+            while(true){
+                boolean flag = true;
+                ConsumerRecords<String,String> records = consumer.poll(100);
+                for(ConsumerRecord<String,String> record:records){
+                    System.out.println(String.format("topic:%s,partition:%s,key:%s,value:%s",
+                            record.topic(),
+                            record.partition(),
+                            record.key(),
+                            record.value()));
+                    if(record.value().equals("done")) {
+                        flag = false;
+                    }
+                }
+                try{
+                    consumer.commitAsync((map, e) -> {
+                        if(e != null){
+                            System.out.println("System fail to commit at offset:"+e.getMessage());
+                        }
+                    });
+                }catch (CommitFailedException ex){
+                    ex.printStackTrace();
+                }
+                if(!flag)break;
+            }
+
+        }finally {
+            consumer.close();;
+        }
+    }
+
+    private static void mixSyncAndAsyncCommit(){
+        properties.put("auto.commit.offset",false);
+        consumer = new KafkaConsumer<String, String>(properties);
+        consumer.subscribe(Collections.singleton("imooc-kafka-study"));
+        try{
+            while(true) {
+                boolean flag = true;
+                ConsumerRecords<String, String> records = consumer.poll(100);
+                for (ConsumerRecord<String, String> record : records) {
+                    System.out.println(String.format("topic:%s,partition:%s,key:%s,value:%s",
+                            record.topic(),
+                            record.partition(),
+                            record.key(),
+                            record.value()));
+                    if(record.value().equals("done")) {
+                        flag = false;
+                    }
+                }
+                if(!flag)break;
+            }
+        }catch (CommitFailedException ex){
+            System.out.println("Commit fail at offset:"+ex.getMessage());
+        }finally {
+            try{
+                consumer.commitSync();
+            }finally {
+                consumer.close();
+            }
         }
     }
 
